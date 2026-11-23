@@ -1,3 +1,4 @@
+
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -23,7 +24,6 @@ private slots:
     void saveFile();
     void undoAction();
     void zoomAction();
-    void aboutInfo();
 
 private:
     void createActions();
@@ -33,31 +33,30 @@ private:
     void createStatusBar();
     void updateWorkspaceDisplay();
 
-    // Menus
+    // Menus: File / Image / Edit
     QMenu *fileMenu = nullptr;
-    QMenu *editMenu = nullptr;
     QMenu *imageMenu = nullptr;
-    QMenu *viewMenu = nullptr;
+    QMenu *editMenu = nullptr;
 
     // ToolBar
     QToolBar *mainToolBar = nullptr;
 
     // Actions
-    QAction *openAct = nullptr;
+    QAction *openImageAct = nullptr;
     QAction *saveAct = nullptr;
     QAction *exitAct = nullptr;
     QAction *undoAct = nullptr;
     QAction *zoomAct = nullptr;
 
-    // Central Workspace (scalable image area)
-    QScrollArea *scrollArea = nullptr;
+    // CentralWidget
+    QScrollArea *centralScrollArea = nullptr;
     QLabel *workspaceLabel = nullptr;
 
-    // Status Bar labels
-    QLabel *statusMessageLabel = nullptr;
-    QLabel *imageSizeLabel = nullptr;
+    // Status bar indicators
+    QLabel *statusLabel = nullptr;
+    QLabel *sizeLabel = nullptr;
 
-    // Current image state
+    // Image state
     QImage currentImage;
     QString currentFilePath;
     double zoomFactor = 1.0;

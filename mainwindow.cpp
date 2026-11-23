@@ -29,41 +29,40 @@ void MainWindow::createActions()
 {
     QStyle *appStyle = style();
 
-    // Open Action
-    openAct = new QAction(tr("&Open..."), this);
-    openAct->setShortcut(QKeySequence::Open); // Ctrl+O
-    openAct->setStatusTip(tr("Open an image file"));
-    openAct->setIcon(QIcon::fromTheme("document-open",
-                                      appStyle->standardIcon(QStyle::SP_DialogOpenButton)));
-    connect(openAct, &QAction::triggered, this, &MainWindow::openFile);
+    // 'Open Image' QAction (shared by File Menu and ToolBar)
+    openImageAct = new QAction(tr("Open Image"), this);
+    openImageAct->setShortcut(QKeySequence::Open);
+    openImageAct->setStatusTip(tr("Open an image file"));
+    openImageAct->setIcon(QIcon::fromTheme("document-open",
+                                           appStyle->standardIcon(QStyle::SP_DialogOpenButton)));
+    connect(openImageAct, &QAction::triggered, this, &MainWindow::openFile);
 
-    // Save Action
-    saveAct = new QAction(tr("&Save"), this);
-    saveAct->setShortcut(QKeySequence::Save); // Ctrl+S
+    // Save QAction with Ctrl+S shortcut
+    saveAct = new QAction(tr("Save"), this);
+    saveAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     saveAct->setStatusTip(tr("Save the current image"));
     saveAct->setIcon(QIcon::fromTheme("document-save",
                                       appStyle->standardIcon(QStyle::SP_DialogSaveButton)));
     connect(saveAct, &QAction::triggered, this, &MainWindow::saveFile);
 
-    // Exit Action
-    exitAct = new QAction(tr("E&xit"), this);
-    exitAct->setShortcut(QKeySequence::Quit); // Ctrl+Q
+    // Exit QAction
+    exitAct = new QAction(tr("Exit"), this);
+    exitAct->setShortcut(QKeySequence::Quit);
     exitAct->setStatusTip(tr("Exit the application"));
     exitAct->setIcon(QIcon::fromTheme("application-exit",
                                       appStyle->standardIcon(QStyle::SP_DialogCloseButton)));
     connect(exitAct, &QAction::triggered, this, &QWidget::close);
 
-    // Undo Action (placeholder for Edit menu & toolbar)
-    undoAct = new QAction(tr("&Undo"), this);
-    undoAct->setShortcut(QKeySequence::Undo); // Ctrl+Z
-    undoAct->setStatusTip(tr("Undo last edit"));
+    // Common Edit / Image QActions
+    undoAct = new QAction(tr("Undo"), this);
+    undoAct->setShortcut(QKeySequence::Undo);
+    undoAct->setStatusTip(tr("Undo last operation"));
     undoAct->setIcon(QIcon::fromTheme("edit-undo",
                                       appStyle->standardIcon(QStyle::SP_ArrowBack)));
     connect(undoAct, &QAction::triggered, this, &MainWindow::undoAction);
 
-    // Zoom Action (placeholder for View/Image menu & toolbar)
-    zoomAct = new QAction(tr("&Zoom"), this);
-    zoomAct->setStatusTip(tr("Toggle workspace zoom"));
+    zoomAct = new QAction(tr("Zoom"), this);
+    zoomAct->setStatusTip(tr("Toggle zoom factor"));
     zoomAct->setIcon(QIcon::fromTheme("zoom-in",
                                       appStyle->standardIcon(QStyle::SP_FileDialogDetailedView)));
     connect(zoomAct, &QAction::triggered, this, &MainWindow::zoomAction);
@@ -72,19 +71,16 @@ void MainWindow::createActions()
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(openAct);
+    fileMenu->addAction(openImageAct);
     fileMenu->addAction(saveAct);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
 
-    editMenu = menuBar()->addMenu(tr("&Edit"));
-    editMenu->addAction(undoAct);
-
     imageMenu = menuBar()->addMenu(tr("&Image"));
     imageMenu->addAction(zoomAct);
 
-    viewMenu = menuBar()->addMenu(tr("&View"));
-    viewMenu->addAction(zoomAct);
+    editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(undoAct);
 }
 
 void MainWindow::createToolBars()
@@ -93,38 +89,40 @@ void MainWindow::createToolBars()
     mainToolBar->setObjectName("mainToolBar");
     mainToolBar->setMovable(false);
 
-    // Common actions shared between Menu and ToolBar
-    mainToolBar->addAction(openAct);
+    // 'Open Image' and common QActions on ToolBar
+    mainToolBar->addAction(openImageAct);
     mainToolBar->addAction(saveAct);
     mainToolBar->addSeparator();
     mainToolBar->addAction(undoAct);
     mainToolBar->addAction(zoomAct);
+    mainToolBar->addSeparator();
+    mainToolBar->addAction(exitAct);
 }
 
 void MainWindow::createCentralWorkspace()
 {
-    scrollArea = new QScrollArea(this);
-    scrollArea->setWidgetResizable(true);
-    scrollArea->setAlignment(Qt::AlignCenter);
-    scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    scrollArea->setStyleSheet("QScrollArea { background-color: #222524; border: none; }");
+    centralScrollArea = new QScrollArea(this);
+    centralScrollArea->setWidgetResizable(true);
+    centralScrollArea->setAlignment(Qt::AlignCenter);
+    centralScrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    centralScrollArea->setStyleSheet("QScrollArea { background-color: #222524; border: none; }");
 
-    workspaceLabel = new QLabel(scrollArea);
+    workspaceLabel = new QLabel(centralScrollArea);
     workspaceLabel->setAlignment(Qt::AlignCenter);
     workspaceLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     workspaceLabel->setStyleSheet("QLabel { color: #8c9691; font-size: 24px; font-weight: bold; }");
 
-    scrollArea->setWidget(workspaceLabel);
-    setCentralWidget(scrollArea);
+    centralScrollArea->setWidget(workspaceLabel);
+    setCentralWidget(centralScrollArea);
 }
 
 void MainWindow::createStatusBar()
 {
-    statusMessageLabel = new QLabel(tr("Ready"), this);
-    imageSizeLabel = new QLabel(tr("0 x 0 px"), this);
+    statusLabel = new QLabel(tr("Ready"), this);
+    sizeLabel = new QLabel(tr("0 x 0 px"), this);
 
-    statusBar()->addWidget(statusMessageLabel, 1);
-    statusBar()->addPermanentWidget(imageSizeLabel);
+    statusBar()->addWidget(statusLabel, 1);
+    statusBar()->addPermanentWidget(sizeLabel);
 }
 
 void MainWindow::updateWorkspaceDisplay()
@@ -132,7 +130,7 @@ void MainWindow::updateWorkspaceDisplay()
     if (currentImage.isNull()) {
         workspaceLabel->setPixmap(QPixmap());
         workspaceLabel->setText(tr("IMAGE\nWORKSPACE"));
-        imageSizeLabel->setText(tr("0 x 0 px"));
+        sizeLabel->setText(tr("0 x 0 px"));
         return;
     }
 
@@ -145,7 +143,7 @@ void MainWindow::updateWorkspaceDisplay()
                                        Qt::SmoothTransformation);
     workspaceLabel->setText(QString());
     workspaceLabel->setPixmap(scaledPixmap);
-    imageSizeLabel->setText(tr("%1 x %2 px").arg(currentImage.width()).arg(currentImage.height()));
+    sizeLabel->setText(tr("%1 x %2 px").arg(currentImage.width()).arg(currentImage.height()));
 }
 
 void MainWindow::openFile()
@@ -171,12 +169,12 @@ void MainWindow::openFile()
     currentFilePath = fileName;
     zoomFactor = 1.0;
     updateWorkspaceDisplay();
-    statusMessageLabel->setText(tr("Opened: %1").arg(fileName));
+    statusLabel->setText(tr("Opened: %1").arg(fileName));
 }
 
 void MainWindow::saveFile()
 {
-    statusMessageLabel->setText(tr("Save triggered"));
+    statusLabel->setText(tr("Save triggered (Ctrl+S)"));
 
     if (currentImage.isNull()) {
         QMessageBox::information(this, tr("Save"), tr("No image loaded to save."));
@@ -202,27 +200,22 @@ void MainWindow::saveFile()
     }
 
     currentFilePath = targetPath;
-    statusMessageLabel->setText(tr("Saved: %1").arg(targetPath));
+    statusLabel->setText(tr("Saved: %1").arg(targetPath));
 }
 
 void MainWindow::undoAction()
 {
-    statusMessageLabel->setText(tr("Undo triggered"));
+    statusLabel->setText(tr("Undo triggered"));
 }
 
 void MainWindow::zoomAction()
 {
     if (currentImage.isNull()) {
-        statusMessageLabel->setText(tr("Zoom triggered (no image)"));
+        statusLabel->setText(tr("Zoom triggered"));
         return;
     }
 
     zoomFactor = (zoomFactor < 1.5) ? zoomFactor * 1.25 : 1.0;
     updateWorkspaceDisplay();
-    statusMessageLabel->setText(tr("Zoom: %1%").arg(static_cast<int>(zoomFactor * 100)));
-}
-
-void MainWindow::aboutInfo()
-{
-    QMessageBox::about(this, tr("About Image Studio"), tr("Qt Widgets Image Studio"));
+    statusLabel->setText(tr("Zoom: %1%").arg(static_cast<int>(zoomFactor * 100)));
 }
